@@ -1,5 +1,4 @@
 import pygame
-import logging
 
 from command import Actor, Left, Right, Jump, Attack, Dash, Stop
 from subject import Subject, EVENT_COIN_ACQUIRED, EVENT_PLAYER_INJURED
@@ -9,10 +8,9 @@ from subject import Subject, EVENT_COIN_ACQUIRED, EVENT_PLAYER_INJURED
 class Player(Actor, Subject):
     def __init__(self):
         Subject.__init__(self)
-        
-        self.control_keys = dict()
                 
         #player movement
+        self.control_keys = dict()
         self.gravity = 0.8
         self.gravity_wall = self.gravity/2.5
         self.direction = pygame.math.Vector2(0,0)
@@ -23,6 +21,10 @@ class Player(Actor, Subject):
         
         self.right_disable = False
         self.left_disable = False
+        
+        #player sounds
+        self.jump_sound = pygame.mixer.Sound('Sound/jump.wav')
+        self.jump_sound.set_volume(0.7)
         
         #player status
         self.max_health = 100
@@ -38,9 +40,9 @@ class Player(Actor, Subject):
         
         #abilities
         self.dash_speed = self.x_vel*2
-        self.dash_cooldown = 1000        
+        self.dash_cooldown = 1    
         self.dash_input = 0
-        self.attack_cooldown = 1000
+        self.attack_cooldown = 1
         self.attack_input = 0
         
         self.abilities = {'attack': [self.attack_input,self.attack_cooldown], 'dash': [self.dash_input,self.dash_cooldown]}
@@ -61,7 +63,7 @@ class Player(Actor, Subject):
                     if self.control_keys[key].__name__ == "Jump" and self.jumping:
                         return
                     else:
-                        print("Sending " + self.control_keys[key].__name__ )
+                        #print("Sending " + self.control_keys[key].__name__ )
                         cmd = self.control_keys[key]()
                         cmd.execute(self)
             return
@@ -82,7 +84,7 @@ class Player(Actor, Subject):
         
         if movement == "Jump": 
             if self.on_ground:
-                self.direction.y = self.y_vel
+                self.jump()
                 
         if movement == "Attack":
             self.attack()
@@ -91,12 +93,13 @@ class Player(Actor, Subject):
             self.dash()
         
     # Método de salto do jogador
-    def jump(self,wall=False):
-        self.direction.y = max(self.direction.y+self.y_inc_temp,self.y_vel)
-        print('Max: ' + str(self.direction.y))
-    
+    def jump(self):
+        #self.direction.y = max(self.direction.y+self.y_inc_temp,self.y_vel)
+        self.direction.y = self.y_vel
+        self.jump_sound.play()
+        
     def attack(self):
-        current_time = pygame.time.get_ticks()
+        current_time = pygame.time.get_ticks()/1000
         if self.check_cooldown('attack', current_time) and not self.attacking:
             self.attacking = True
             self.abilities['attack'][0] = current_time
@@ -105,7 +108,7 @@ class Player(Actor, Subject):
     
     # Método de dashing do jogador, fazendo com que este percorre uma grande distancia num curto perio de tempo
     def dash(self):
-        current_time = pygame.time.get_ticks()
+        current_time = pygame.time.get_ticks()/1000
         if self.check_cooldown('dash', current_time):
             if self.to_right:
                 self.direction.x = self.dash_speed
@@ -152,6 +155,6 @@ class Player(Actor, Subject):
     
     # Método para forçar a morte do jogador
     def kill(self):
-        print("Player has died")
+        if not self.dead: print("Player has died")
         self.dead = True
             

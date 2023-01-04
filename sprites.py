@@ -112,8 +112,9 @@ class PlayerSprite(pygame.sprite.Sprite):
         gravity = self.player.gravity
         self.player.direction.y += self.player.gravity
         self.rect.y += self.player.direction.y
-    
-    def update(self):    
+        
+        
+    def update(self, survival_shift = None):    
         
         def animate():
             
@@ -162,18 +163,6 @@ class PlayerSprite(pygame.sprite.Sprite):
                     
             self.player.rect = self.rect
             
-            #elif self.on_ceiling:
-            #    self.rect = self.image.get_rect(midtop=self.rect.midtop)
-            #else:
-            #    self.rect = self.image.get_rect(center=self.rect.center)
-            
-            #if self.on_ground:
-            #    self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
-            #elif self.on_ceiling:
-            #    self.rect = self.image.get_rect(midtop=self.rect.midtop)
-            #else:
-            #    self.rect = self.image.get_rect(center=self.rect.center)
-        
         def run_dust_animation():
             if self.player.status == 'run' and self.player.on_ground:
                 self.dust_frame_index += self.dust_animation_speed
@@ -194,6 +183,9 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.player.get_status()
         animate()
         run_dust_animation()
+        
+        if survival_shift is not None:
+            self.rect.x += survival_shift     
         
         
 class GUISprite(pygame.sprite.Sprite):

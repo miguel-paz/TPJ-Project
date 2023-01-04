@@ -29,15 +29,21 @@ class Level:
         self.world_shift = 0
         self.world_shifted = 0
         self.survival_shift = -1
+        self.survival_threshold = 15
+        self.threshold_cooldown = self.survival_threshold
+        self.threshold_input_time = 0
         self.current_x = 0
         self.fall_damage = 1/4
         self.built = False
         self.start_time = 0
         self.current_time = 0
         
+        self.bg_music = pygame.mixer.Sound('Sound/bg_music.mp3')
+        self.bg_music.set_volume(0.6)
+        self.bg_music.play(-1)
+        
         #dust
         self.dust_sprite = pygame.sprite.GroupSingle()
-        #self.player_on_ground = False
         
         self.end_screen = pygame.sprite.GroupSingle()
         
@@ -177,6 +183,7 @@ class Level:
                         
     # Método responsável por construir o nível dinamicamente. Apenas usado quando o tipo do nivel é survival.  
     def build(self, layout):
+        self.tiles.empty()
         terrain_tile_list = import_cut_tiles('Sprites/Terrain/terrain_tiles.png')
         parsed_map = copy.deepcopy(layout)
         maximum_width = len(self.level_data[0])
@@ -357,19 +364,20 @@ class Level:
         end_screen_sprite = WinLoseSprite('YOU WON!', self.display_surface)
         self.end_screen.add(end_screen_sprite)
         self.win = True
+        self.bg_music.set_volume(0)
         
     # Método responsável por atualizar o atributo win, criando uma sprite com GAME OVER
     def lost(self):
         end_screen_sprite = WinLoseSprite('GAME OVER', self.display_surface)
         self.end_screen.add(end_screen_sprite)
         self.win = False
+        self.bg_music.set_volume(0)
                 
     # Método principal de atualização de sprites e verificação de sprites, colisões e estados
     def run(self):
         if self.win is None:
             # Time elapsed in seconds
             self.current_time = (pygame.time.get_ticks()-self.start_time)/1000
-            
             
             # dust particles
             self.dust_sprite.update(self.world_shift)
@@ -389,7 +397,13 @@ class Level:
                 self.enemies.draw(self.display_surface)
                 
             if self.level_type == 'survival':
-                #self.survival_shift -= self.current_time*0.05
+                #print(self.current_time//self.survival_threshold)
+                if (self.current_time - self.threshold_input_time) >= self.threshold_cooldown:
+                    future_shift = 2*self.survival_shift
+                    player = self.player_sprites.sprite.player
+                    if -future_shift < player.x_vel + player.dash_speed:
+                        self.survival_shift = 2*self.survival_shift
+                        self.threshold_input_time = self.current_time
                 self.generation_tiles.update(self.survival_shift)
                 self.generation_tiles.draw(self.display_surface)
                 self.tiles.update(self.survival_shift)
@@ -399,7 +413,11 @@ class Level:
             self.tiles.draw(self.display_surface)
             
             # Player
-            self.player_sprites.update()
+            if self.level_type == 'normal':
+                self.player_sprites.update()
+            if self.level_type == 'survival':
+                self.player_sprites.update(self.survival_shift)
+                
             self.horizontal_movement_collision()
             self.vertical_movement_collision()
             if self.level_type == 'normal':
@@ -416,7 +434,7 @@ class Level:
             self.check_fall()
             
             if self.level_type == "survival":
-                self.world_shifted += 1 #self.current_time*0.05
+                self.world_shifted += -self.survival_shift #self.current_time*0.05
                 if int(self.world_shifted/TILE_SIZE) >= 1:
                     self.world_shifted = 0
                     self.generate_column()
