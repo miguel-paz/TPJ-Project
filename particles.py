@@ -6,10 +6,6 @@ class ParticleEffect(pygame.sprite.Sprite):
         super().__init__()
         self.frame_index = 0
         self.animation_speed = 0.5
-        #if type == 'jump':
-        #    self.frames = import_folder('Overworld/graphics/character/dust_particles/jump')
-        #if type == 'land':
-        #    self.frames = import_folder('Overworld/graphics/character/dust_particles/land')
         self.image = self.frames[int(self.frame_index)]
         self.rect = self.image.get_rect(center = pos)
         

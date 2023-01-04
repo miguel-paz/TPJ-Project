@@ -5,6 +5,7 @@ from csv import reader
 from settings import TILE_SIZE
 from level_data import level_0 # test
 
+# Método responsável por aceder a um ficheiro consoante o path indicado, retornando uma lista com as imagens aí presentes
 def import_folder(path):
     surface_list = []
     for _,__,imgs in walk(path):
@@ -15,11 +16,13 @@ def import_folder(path):
     
     return surface_list
 
+# Método responsável por aceder a um ficheiro csv consoante o path indicado, retornando uma lista com o conteudo do ficheiro
 def import_csv(path):
     with open(path) as layer:
         level = reader(layer, delimiter = ',')
         return list(level)    
         
+# Método responsável por dividir uma imagem num conjunto de sprites consoante o tamanho do tile definido, devolvendo uma lista com essas sprites 
 def import_cut_tiles(path):
     tileset = pygame.image.load(path).convert_alpha()
     tile_num_x = int(tileset.get_size()[0] / TILE_SIZE)

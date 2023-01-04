@@ -12,7 +12,9 @@ from particles import ParticleEffect
 from sprites import PlayerSprite, TileSprite, StaticTileSprite, CrateSprite, CoinSprite, PalmSprite, EnemySprite, GUISprite, WinLoseSprite
 from support import import_csv, import_cut_tiles
 
-
+# A classe Level é responsavel por gerar o nivel a ser jogado pelo jogador consoante o tipo definido,
+# normal - O objetivo deste modo é colecionar todas as moedas presentes no nível sem que o jogador fique sem vida.
+# survival - O objetivo deste modo é sobreviver o máximo tempo possível sem cair do mapa, enquanto as plataformas são geradas de forma aleatória.
 class Level:
     def __init__(self, level_data, level_type, surface):
         self.level_data = level_data
@@ -107,6 +109,11 @@ class Level:
                 print('Type of level data not supported for game mode')
         
         
+    # Método usado quando o tipo do nivel é normal.
+    # É responsável por devolver o sprite group associado à layer type inserida, 
+    # sendo também responsável por recriar os tilesets da mesma forma que o software "Tiled".
+    # Como o id gerado por cada sprite do tileset é atribuido da mesma forma que o software "Tiled", 
+    # a atribuição da sprite é diretamente associada à posição da célula do ficheiro .csv. 
     def create_tile_group(self,layer,layer_type):
         sprite = None
         if layer_type == 'player':
@@ -168,38 +175,7 @@ class Level:
 
         return sprite_group
                         
-    #def create_jump_particles(self, pos):
-    #    player_sprite = self.player_sprites.sprite
-    #    player = player_sprite.player
-        
-    #    if player.to_right:
-    #        pos -= pygame.math.Vector2(10.5)
-    #    else:
-    #        pos += pygame.math.Vector2(10,-5)
-    #    jump_particle_sprite = ParticleEffect(pos, 'jump')
-    #    self.dust_sprite.add(jump_particle_sprite)
-            
-    #def create_land_particles(self):
-        #player_sprite = self.player_sprites.sprite
-        #player = player_sprite.player
-        
-        #if not player.on_ground and player.on_ground and not self.dust_sprite.sprites():
-            #if player.to_right:
-            #    pos = pygame.math.Vector2(10.15)
-            #else:
-            #    pos = pygame.math.Vector2(-10,15)
-            #fall_particle_sprite = ParticleEffect(player_sprite.rect.midbottom-pos,'land')
-            #self.dust_sprite.add(fall_particle_sprite)
-        
-    #def get_player_on_ground(self):
-    #   player_sprite = self.player_sprites.sprite
-    #    player = player_sprite.player
-        
-    #    if player.on_ground:
-    #        player.on_ground = True
-    #    else:
-    #        player.on_ground = False
-        
+    # Método responsável por construir o nível dinamicamente. Apenas usado quando o tipo do nivel é survival.  
     def build(self, layout):
         terrain_tile_list = import_cut_tiles('Sprites/Terrain/terrain_tiles.png')
         parsed_map = copy.deepcopy(layout)
@@ -244,36 +220,8 @@ class Level:
         self.built = True
         self.level_data = copy.deepcopy(parsed_map)
         
-    def generate(self):
-        maximum_width = len(self.level_data[0])
-        maximum_height = len(self.level_data)
-        gen_map = [[' ']*maximum_width for i in range(maximum_height)]
-        generation_check_tile = int(len(self.level_data[0])/2)
-        maximum_tiles_per_row = 5
-        initial_row = 6
-        fill_row = False
-        for row_idx,row in enumerate(gen_map):
-            generated_tile = 0
-            fill_row = not fill_row
-            for column_idx,column in enumerate(row):
-                if column_idx == generation_check_tile:
-                    obj = '|'
-                    gen_map[row_idx][column_idx] = obj
-                else:
-                    if row_idx+1 >= initial_row and fill_row:
-                        if generated_tile <= maximum_tiles_per_row:
-                            obj = random.choice(level_objects)
-                        else:
-                            obj == ' '
-                        if obj == 'X': 
-                            generated_tile += 1
-                        gen_map[row_idx][column_idx] = obj
-            
-        gen_array = np.array(gen_map)
-        level_data_array = np.array(self.level_data)
-        new_gen_map = np.concatenate((level_data_array, gen_array), axis = 1) 
-        self.build(new_gen_map)
-        
+    # Método responsável por gerar e adicionar uma nova coluna ao mapa gerado dinamicamente. 
+    # Esta coluna irá conter uma plataforma ou não em cada posição.     
     def generate_column(self):
         maximum_width = len(self.level_data[0])
         maximum_height = len(self.level_data)
@@ -299,17 +247,8 @@ class Level:
         level_data_array = np.delete(level_data_array,0,1)
         new_gen_map = np.concatenate((level_data_array, gen_array), axis = 1) 
         self.build(new_gen_map)
-        
-    #def check_generation(self):
-    #    player_sprite = self.player_sprites.sprite
-    #    player = player_sprite.player
-        
-    #    generation_collision = pygame.sprite.spritecollide(player_sprite, self.generation_tiles, True)
-        
-    #    if generation_collision:
-    #        self.generation_tiles.empty()
-    #        self.generate()
-                    
+      
+    # Método responsável por mover o mapa em vez do jogador quando este se aproxima das bordas do display            
     def scroll_x(self):
         player_sprite = self.player_sprites.sprite
         player = player_sprite.player
@@ -326,6 +265,7 @@ class Level:
             
         self.world_shifted += (-self.world_shift)
     
+    # Método de verificação de colisões horizontais
     def horizontal_movement_collision(self):
         player_sprite = self.player_sprites.sprite
         player = player_sprite.player
@@ -348,6 +288,7 @@ class Level:
         if player.on_right and (player_sprite.rect.right > self.current_x or player.direction.x <= 0):
             player.on_right = False
                 
+    # Método de verificação de colisões verticais
     def vertical_movement_collision(self):
         player_sprite = self.player_sprites.sprite
         player = player_sprite.player
@@ -373,26 +314,22 @@ class Level:
         if player.on_ceiling and player.direction.y > 0:
             player.on_ceiling = False
     
+    # Método de verificação de colisões entre inimigos e as contraints definidas, invertendo a direção destes
     def enemy_wall_collision(self):
         for sprite in self.enemy_sprites.sprites():
             if pygame.sprite.spritecollide(sprite,self.constraint_sprites,False):
                 sprite.enemy.reverse()
     
+    # Método de verificação de colisões entre o jogador e as moedas e o jogador e os inimigos
     def player_enemy_coin_collision(self):
         player_sprite = self.player_sprites.sprite
         player = player_sprite.player
         
         coin_collision = pygame.sprite.spritecollide(player_sprite, self.coins, True)
-        #coin_collision = pygame.sprite.groupcollide(self.player_sprites, self.coins, False, True)
         
         if coin_collision:
             for coin in coin_collision:
                 player.get_coin(coin.coin.value)
-        # Alternative
-        #    for collision in coin_collision:
-        #        for coin in coin_collision[collision]:
-        #            self.player.get_coin(coin.coin.value)
-                
         
         enemy_collision = pygame.sprite.spritecollide(player_sprite, self.enemies, True)
         if enemy_collision:
@@ -402,6 +339,7 @@ class Level:
                 else:
                     player.get_hit(enemy.enemy.damage)
         
+    # Método de verificação da posição do jogador abaixo do display
     def check_fall(self):
         player_sprite = self.player_sprites.sprite
         player = player_sprite.player
@@ -414,16 +352,19 @@ class Level:
             self.world_shift = self.world_shifted
             self.world_shifted = 0
             
+    # Método responsável por atualizar o atributo win, criando uma sprite com YOU WON
     def won(self):
         end_screen_sprite = WinLoseSprite('YOU WON!', self.display_surface)
         self.end_screen.add(end_screen_sprite)
         self.win = True
         
+    # Método responsável por atualizar o atributo win, criando uma sprite com GAME OVER
     def lost(self):
         end_screen_sprite = WinLoseSprite('GAME OVER', self.display_surface)
         self.end_screen.add(end_screen_sprite)
         self.win = False
                 
+    # Método principal de atualização de sprites e verificação de sprites, colisões e estados
     def run(self):
         if self.win is None:
             # Time elapsed in seconds
@@ -460,9 +401,7 @@ class Level:
             # Player
             self.player_sprites.update()
             self.horizontal_movement_collision()
-            #self.get_player_on_ground() 
             self.vertical_movement_collision()
-            #self.create_land_particles()
             if self.level_type == 'normal':
                 self.scroll_x()
             self.player_sprites.draw(self.display_surface)
@@ -481,7 +420,6 @@ class Level:
                 if int(self.world_shifted/TILE_SIZE) >= 1:
                     self.world_shifted = 0
                     self.generate_column()
-                #self.check_generation()
         else:
             self.end_screen.update()
             

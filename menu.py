@@ -4,6 +4,8 @@ from settings import GAME_NAME
 from button import Button
 from sprites import TitleSprite, ButtonSprite
 
+# Classe tem como objetivo criar um conjunto de botões, utilizando a classe Button e ButtonSprite,
+# associando a cada um deles uma transição de estado ao carregar nestes.
 class Menu:
     def __init__(self, button_dict, surface):
         self.clicked = False
@@ -21,9 +23,11 @@ class Menu:
             sprite = ButtonSprite(button, key, offset, self.display_surface)
             self.buttons.add(sprite)
             
+    # Método responsável por atualizar o debaunce do clique
     def click(self, click_val):
         self.clicked = click_val
         
+    # Método responsável por verificar a colisão entre o ponto do clique e o botão
     def check_click_collision(self):
         if self.clicked:
             pos = pygame.mouse.get_pos()
@@ -32,6 +36,7 @@ class Menu:
                     button = sprite.button
                     button.callback_funct(button.args)
         
+    # Método principal de atualização de sprites e verificação de sprites
     def run(self):
         self.title.update()
         self.buttons.update()

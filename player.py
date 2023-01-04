@@ -4,6 +4,8 @@ import logging
 from command import Actor, Left, Right, Jump, Attack, Dash, Stop
 from subject import Subject, EVENT_COIN_ACQUIRED, EVENT_PLAYER_INJURED
 
+# A classe “Player” identifica e caracteriza o jogador, sendo este capaz de seguir em frente, trás, 
+# saltar, atacar e “dashing”, gerando o seu próprio conjunto de estados associados.
 class Player(Actor, Subject):
     def __init__(self):
         Subject.__init__(self)
@@ -43,10 +45,11 @@ class Player(Actor, Subject):
         
         self.abilities = {'attack': [self.attack_input,self.attack_cooldown], 'dash': [self.dash_input,self.dash_cooldown]}
         
-    
+    # Método de associação de teclas (controlos) às ações do jogador
     def controls(self, left, right, jump, attack, dash):
         self.control_keys = {left: Left, right: Right, jump: Jump, attack: Attack, dash: Dash}        
     
+    # Lógica de receção, validação e envio do comando
     def command(self, control):
         if control == "Stop":
             cmd = Stop()
@@ -64,6 +67,7 @@ class Player(Actor, Subject):
             return
         print("Invalid key")
         
+    # Consoante o comando recebido, é executada uma ação representante do mesmo
     def move(self, movement):
     
         if movement == "Right":
@@ -86,6 +90,7 @@ class Player(Actor, Subject):
         if movement == "Dash":
             self.dash()
         
+    # Método de salto do jogador
     def jump(self,wall=False):
         self.direction.y = max(self.direction.y+self.y_inc_temp,self.y_vel)
         print('Max: ' + str(self.direction.y))
@@ -98,6 +103,7 @@ class Player(Actor, Subject):
         else: 
             print('attack on cooldown')
     
+    # Método de dashing do jogador, fazendo com que este percorre uma grande distancia num curto perio de tempo
     def dash(self):
         current_time = pygame.time.get_ticks()
         if self.check_cooldown('dash', current_time):
@@ -112,7 +118,7 @@ class Player(Actor, Subject):
             if self.on_ground:
                 self.direction.x = 0
                 
-    
+    # Verifica os cooldowns das habilidades consoante a ultima vez que foram usadas
     def check_cooldown(self,ability,current_time):
         input_time = self.abilities[ability][0]
         cooldown = self.abilities[ability][1]
@@ -120,6 +126,7 @@ class Player(Actor, Subject):
             return True
         return False
          
+    # Logica de transição de estados do jogador
     def get_status(self):
         if self.attacking:
             self.status = "attack"
@@ -133,16 +140,18 @@ class Player(Actor, Subject):
             else:
                 self.status = 'idle'
         
-    
+    # Método de notificação de perda de vida
     def get_hit(self, damage):
         self.damage_taken = self.max_health*damage
         self.notify(EVENT_PLAYER_INJURED)
-        
+    
+    # Método de notificação de moeda colecionada 
     def get_coin(self, value):
         self.acquired_coin_value = value
         self.notify(EVENT_COIN_ACQUIRED)
     
+    # Método para forçar a morte do jogador
     def kill(self):
-        logging.info("Player has died")
+        print("Player has died")
         self.dead = True
             
