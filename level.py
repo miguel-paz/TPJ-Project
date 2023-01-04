@@ -55,6 +55,19 @@ class Level:
         if self.level_type == 'normal':
             # Level sprite grouping
             if type(self.level_data) is dict:
+                #self.terrain_sprites = pygame.sprite.Group()
+                #self.grass_sprites = pygame.sprite.Group()
+                #self.crate_sprites = pygame.sprite.Group()
+                #self.bg_palm_sprites = pygame.sprite.Group()
+                #self.coin_sprites = pygame.sprite.Group()
+                #self.enemy_sprites = pygame.sprite.Group()
+                #self.constraint_sprites = pygame.sprite.Group()
+                #layer_list = [(self.terrain_sprites,'terrain'), (self.grass_sprites,'grass'), (self.crate_sprites,'crates'), (self.coin_sprites,'coins'), (self.bg_palm_sprites,'bg palms'), (self.enemy_sprites,'enemies'), (self.constraint_sprites,'constraints')]
+                #for sprite_group,layer_name in layer_list:
+                #    sprite_layer = import_csv(level_data[layer_name])
+                #    sprite_group = self.create_tile_group(sprite_layer,layer_name)
+                #    print(sprite_group)
+                    
                 terrain_layer = import_csv(level_data['terrain'])
                 self.terrain_sprites = self.create_tile_group(terrain_layer,'terrain')
                 
@@ -66,9 +79,6 @@ class Level:
                 
                 coin_layer = import_csv(level_data['coins'])
                 self.coin_sprites = self.create_tile_group(coin_layer,'coins')
-                
-                fg_palm_layer = import_csv(level_data['fg palms'])
-                self.fg_palm_sprites = self.create_tile_group(fg_palm_layer,'fg palms')
                 
                 bg_palm_layer = import_csv(level_data['bg palms'])
                 self.bg_palm_sprites = self.create_tile_group(bg_palm_layer,'bg palms')
@@ -84,7 +94,7 @@ class Level:
                 # Decorative sprites
                 self.decoration_tiles.add(self.grass_sprites)
                 self.decoration_tiles.add(self.crate_sprites)
-                self.decoration_tiles.add(self.fg_palm_sprites)
+                #self.decoration_tiles.add(self.fg_palm_sprites)
                 self.decoration_tiles.add(self.bg_palm_sprites)
                 
                 # Interactive sprites
@@ -113,8 +123,8 @@ class Level:
                 self.build(self.level_data)
             else:
                 print('Type of level data not supported for game mode')
-        
-        
+
+    
     # Método usado quando o tipo do nivel é normal.
     # É responsável por devolver o sprite group associado à layer type inserida, 
     # sendo também responsável por recriar os tilesets da mesma forma que o software "Tiled".
@@ -434,7 +444,7 @@ class Level:
             self.check_fall()
             
             if self.level_type == "survival":
-                self.world_shifted += -self.survival_shift #self.current_time*0.05
+                self.world_shifted -= self.survival_shift #self.current_time*0.05
                 if int(self.world_shifted/TILE_SIZE) >= 1:
                     self.world_shifted = 0
                     self.generate_column()
