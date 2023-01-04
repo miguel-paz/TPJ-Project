@@ -2,6 +2,6 @@
 <tileset version="1.9" tiledversion="1.9.2" name="crates" tilewidth="58" tileheight="42" tilecount="1" columns="0">
  <grid orientation="orthogonal" width="1" height="1"/>
  <tile id="0">
-  <image width="58" height="42" source="../Overworld/graphics/terrain/crate.png"/>
+  <image width="58" height="42" source="../Sprites/Terrain/crate.png"/>
  </tile>
 </tileset>
